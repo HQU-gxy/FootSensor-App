@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">Foot Sensor</string>
+    <string name="title_home">Home</string>
+    <string name="title_devices">Devices</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_connect">Connect</string>
+    <string name="action_disconnect">Disconnect</string>
+    <string name="state_connected">Connected</string>
+    <string name="state_disconnected">Disconnected</string>
+
+</resources>
