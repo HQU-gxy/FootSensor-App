@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -14,7 +13,6 @@
         android:width="70dp"
         android:height="70dp"
         android:gravity="center"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_sensor2"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +27,6 @@
         android:width="70dp"
         android:height="70dp"
         android:gravity="center"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_sensor3"
         app:layout_constraintStart_toEndOf="@+id/text_sensor1"
@@ -45,7 +42,6 @@
         android:width="70dp"
         android:height="70dp"
         android:gravity="center"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/text_sensor4"
         app:layout_constraintStart_toEndOf="@+id/text_sensor2"
@@ -61,7 +57,6 @@
         android:width="70dp"
         android:height="70dp"
         android:gravity="center"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/text_sensor3"
