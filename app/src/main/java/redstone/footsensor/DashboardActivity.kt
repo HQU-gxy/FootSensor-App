@@ -3,26 +3,23 @@ package redstone.footsensor
 import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCallback
+import android.bluetooth.BluetoothGattCharacteristic
+import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
-import android.bluetooth.le.ScanCallback
-import android.bluetooth.le.ScanFilter
-import android.bluetooth.le.ScanResult
-import android.bluetooth.le.ScanSettings
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.ParcelUuid
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.FrameLayout
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -33,10 +30,15 @@ import redstone.footsensor.databinding.ActivityDashboardBinding
 import java.util.UUID
 
 private const val SERVICE_UUID = "00002333-0000-1000-8000-00805F9B34FB"
+private const val CHAR_UUID_TX = "6E400002-B5A3-F393-E0A9-114514191981"
+private const val CHAR_UUID_RX = "6E400003-B5A3-F393-E0A9-114514191981"
+private const val CHAR_CFG_UUID = "00002902-0000-1000-8000-00805f9b34fb"
 
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
+
+    private lateinit var sensorListAdapter: SensorListAdapter
 
     private fun checkPermission(permission: String) =
         ContextCompat.checkSelfPermission(
@@ -99,7 +101,7 @@ class DashboardActivity : AppCompatActivity() {
             finish()
         }
 
-        val sensorListAdapter = SensorListAdapter()
+        sensorListAdapter = SensorListAdapter()
         sensorList.adapter = sensorListAdapter
 
     }
@@ -133,30 +135,33 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private val gattCallback = object : BluetoothGattCallback() {
-        @SuppressLint("MissingPermission")
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
             if (status != BluetoothGatt.GATT_SUCCESS)
                 Log.e("BLE", "Fucked: $status")
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i("BLE", "Connected")
+                if (gatt == null)
+                    return
 
+                Log.i("BLE", "Connected")
                 mainExecutor.execute {
                     binding.sensorList.visibility = View.VISIBLE
                     binding.buttonDisconnect.setOnClickListener {
-                        gatt?.close()
+                        gatt.close()
                         //Shitty thing
                         this.onConnectionStateChange(gatt, 0, BluetoothGatt.STATE_DISCONNECTED)
                         finish()
                     }
-                    Toast.makeText(this@DashboardActivity,"Connected", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@DashboardActivity, "Connected", Toast.LENGTH_SHORT).show()
                 }
-                gatt?.discoverServices()
+                gatt.discoverServices()
             } else {
                 Log.i("BLE", "Disconnected")
                 mainExecutor.execute {
-                    Toast.makeText(this@DashboardActivity,"Disconnected", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@DashboardActivity, "Disconnected", Toast.LENGTH_SHORT)
+                        .show()
                     binding.sensorList.visibility = View.GONE
                 }
             }
@@ -164,16 +169,64 @@ class DashboardActivity : AppCompatActivity() {
 
         override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
             gatt?.services?.forEach { Log.i("BLE", "Service: ${it.uuid}") }
-            gatt?.getService(UUID.fromString(SERVICE_UUID))
+            try {
+                val service = gatt?.getService(UUID.fromString(SERVICE_UUID))
+                if (service == null) {
+                    Log.e("BLE", "Fucked getting service")
+                    return
+                }
+                val char = service.getCharacteristic(UUID.fromString(CHAR_UUID_RX))
+
+                // The new API is available only in API 33 or later
+                @Suppress("DEPRECATION")
+                binding.buttonSub.setOnClickListener {
+                    it as Button
+
+                    val desc = char.getDescriptor(UUID.fromString(CHAR_CFG_UUID))
+                    if (it.text == resources.getString(R.string.action_sub)) {
+                        it.text = resources.getString(R.string.action_un_sub)
+
+                        gatt.setCharacteristicNotification(char, true)
+                        desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                    } else {
+                        it.text = resources.getString(R.string.action_sub)
+
+                        gatt.setCharacteristicNotification(char, false)
+                        desc.value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
+                    }
+                    gatt.writeDescriptor(desc)
+
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Toast.makeText(this@DashboardActivity, "WTF is the device?", Toast.LENGTH_SHORT)
+                    .show()
+            }
+        }
+
+        override fun onCharacteristicChanged(
+            gatt: BluetoothGatt,
+            characteristic: BluetoothGattCharacteristic,
+            value: ByteArray
+        ) {
+            val sensorData = Array(3) { Array<UByte>(4) { 0u } }
+            for (i in 0 until 12) {
+                sensorData[i / 4][i % 4] = value[i].toUByte()
+            }
+
+            runOnUiThread {
+                sensorListAdapter.updateData(sensorData)
+            }
         }
     }
 }
 
 private class SensorListViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    private val sensor1: FrameLayout = itemView.findViewById(R.id.sensor1)
-    private val sensor2: FrameLayout = itemView.findViewById(R.id.sensor2)
-    private val sensor3: FrameLayout = itemView.findViewById(R.id.sensor3)
-    private val sensor4: FrameLayout = itemView.findViewById(R.id.sensor4)
+    private val sensor1: TextView = itemView.findViewById(R.id.text_sensor1)
+    private val sensor2: TextView = itemView.findViewById(R.id.text_sensor2)
+    private val sensor3: TextView = itemView.findViewById(R.id.text_sensor3)
+    private val sensor4: TextView = itemView.findViewById(R.id.text_sensor4)
 
     val sensors = arrayOf(sensor1, sensor2, sensor3, sensor4)
 }
@@ -181,17 +234,30 @@ private class SensorListViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 @SuppressLint("MissingPermission")
 private class SensorListAdapter : RecyclerView.Adapter<SensorListViewHolder>() {
 
-    private var sensorValues = Array(6) { arrayOf(11, 4, 5, 14) }
+    private var sensorValues = Array(3) { arrayOf<UByte>(114U, 5U, 14U, 191U) }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SensorListViewHolder =
         SensorListViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.sensors_item_view, parent, false)
         )
 
-    override fun getItemCount() = 6
+    override fun getItemCount() = 3
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: SensorListViewHolder, position: Int) {
-        for (sensorID in 0..4) {
-            holder.sensors[sensorID].alpha = sensorValues[position][sensorID].toFloat()
+        for (sensorID in 0 until 4) {
+            val textBg = GradientDrawable().apply {
+                cornerRadius = 20F
+                setColor(Color.argb(sensorValues[position][sensorID].toInt(), 0xE5, 0x39, 0x35))
+            }
+            holder.sensors[sensorID].background = textBg
+            holder.sensors[sensorID].text = "$sensorID, $position"
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun updateData(data: Array<Array<UByte>>) {
+        sensorValues = data
+        notifyDataSetChanged()
     }
 }

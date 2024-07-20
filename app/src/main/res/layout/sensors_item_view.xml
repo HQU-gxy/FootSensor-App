@@ -5,85 +5,66 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <FrameLayout
-        android:id="@+id/sensor1"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+    <TextView
+        android:id="@+id/text_sensor1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/block"
+        android:width="70dp"
+        android:height="70dp"
+        android:gravity="center"
+        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sensor2"
+        app:layout_constraintEnd_toStartOf="@+id/text_sensor2"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:id="@+id/text_sensor1_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="TextView" />
-    </FrameLayout>
-
-
-    <FrameLayout
-        android:id="@+id/sensor2"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+    <TextView
+        android:id="@+id/text_sensor2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/block"
+        android:width="70dp"
+        android:height="70dp"
+        android:gravity="center"
+        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sensor3"
-        app:layout_constraintStart_toEndOf="@id/sensor1"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintEnd_toStartOf="@+id/text_sensor3"
+        app:layout_constraintStart_toEndOf="@+id/text_sensor1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
-        <TextView
-            android:id="@+id/text_sensor2_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="TextView" />
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/sensor3"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+    <TextView
+        android:id="@+id/text_sensor3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/block"
+        android:width="70dp"
+        android:height="70dp"
+        android:gravity="center"
+        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/sensor4"
-        app:layout_constraintStart_toEndOf="@id/sensor2"
-        app:layout_constraintTop_toTopOf="parent" >
+        app:layout_constraintEnd_toStartOf="@+id/text_sensor4"
+        app:layout_constraintStart_toEndOf="@+id/text_sensor2"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 
-        <TextView
-            android:id="@+id/text_sensor3_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="TextView" />
-    </FrameLayout>
-
-    <FrameLayout
-        android:id="@+id/sensor4"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+    <TextView
+        android:id="@+id/text_sensor4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/block"
+        android:width="70dp"
+        android:height="70dp"
+        android:gravity="center"
+        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/sensor3"
-        app:layout_constraintTop_toTopOf="parent" >
-
-        <TextView
-            android:id="@+id/text_sensor4_id"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="TextView" />
-    </FrameLayout>
-
+        app:layout_constraintStart_toEndOf="@+id/text_sensor3"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="1.0" />
 </androidx.constraintlayout.widget.ConstraintLayout>
