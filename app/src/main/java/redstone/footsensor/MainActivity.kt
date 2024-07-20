@@ -5,9 +5,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
-import android.bluetooth.BluetoothGattCallback
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothProfile
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
 import android.bluetooth.le.ScanResult
@@ -32,7 +30,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import redstone.footsensor.databinding.ActivityMainBinding
-import java.util.UUID
 
 private const val SERVICE_UUID = "00002333-0000-1000-8000-00805F9B34FB"
 
@@ -88,7 +85,7 @@ class MainActivity : AppCompatActivity() {
 
             }.launch(enableBtIntent)
         }
-        val devListAdapter = DeviceListAdapter(this, binding)
+        val devListAdapter = DeviceListAdapter(this)
         deviceList.adapter = devListAdapter
 
         val leScanCallback: ScanCallback = object : ScanCallback() {
@@ -128,6 +125,7 @@ class MainActivity : AppCompatActivity() {
             val settings = ScanSettings.Builder().build()
             bleScanner.startScan(listOf(filter), settings, leScanCallback)
         }
+
 
         refreshLayout.autoRefresh()
     }
@@ -170,8 +168,7 @@ private class DeviceListViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 
 @SuppressLint("MissingPermission")
 private class DeviceListAdapter(
-    private val context: Context,
-    private val binding: ActivityMainBinding
+    private val context: Context
 ) :
     RecyclerView.Adapter<DeviceListViewHolder>() {
     private val devices = mutableListOf<BluetoothDevice>()
@@ -197,54 +194,17 @@ private class DeviceListAdapter(
         )
 
 
+    fun startDashboardActivity(address: String) {
+        val intent = Intent()
+        intent.setClass(context, DashboardActivity::class.java)
+        intent.putExtra("address", address)
+        context.startActivity(intent)
+    }
+
     override fun onBindViewHolder(holder: DeviceListViewHolder, position: Int) {
-
-        val gattCallback = object : BluetoothGattCallback() {
-            override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-                if (status != BluetoothGatt.GATT_SUCCESS)
-                    Log.e("BLE", "Fucked: $status")
-
-                if (newState == BluetoothProfile.STATE_CONNECTED) {
-                    Log.i("BLE", "Connected")
-
-                    context.mainExecutor.execute {
-
-                        // Make the 'connect' button 'disconnect'
-                        holder.buttonConnect.text =
-                            context.resources.getString(R.string.action_disconnect)
-
-                        holder.buttonConnect.setOnClickListener {
-                            gatt?.close()
-
-                            //Shitty thing
-                            this.onConnectionStateChange(gatt, 0, BluetoothGatt.STATE_DISCONNECTED)
-                        }
-                        Snackbar.make(binding.root, "Connected", 1000).show()
-                    }
-
-                    gatt?.discoverServices()
-                } else {
-                    Log.i("BLE", "Disconnected")
-                    clearList()
-                    context.mainExecutor.execute {
-                        Snackbar.make(binding.root, "Disconnected", 1000).show()
-
-                        // Restore the 'connect' button
-                        holder.buttonConnect.text =
-                            context.resources.getString(R.string.action_connect)
-                    }
-                }
-            }
-
-            override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-                gatt?.services?.forEach { Log.i("BLE", "Service: ${it.uuid}") }
-                gatt?.getService(UUID.fromString(SERVICE_UUID))
-            }
-        }
-
         holder.textDeviceName.text = devices[position].name
         holder.buttonConnect.setOnClickListener {
-            devices[position].connectGatt(context, true, gattCallback)
+            startDashboardActivity(devices[position].address)
         }
     }
 
