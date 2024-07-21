@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattDescriptor
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothProfile
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -26,6 +27,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
+import lecho.lib.hellocharts.model.Line
+import lecho.lib.hellocharts.model.LineChartData
+import lecho.lib.hellocharts.model.PointValue
+import lecho.lib.hellocharts.model.ValueShape
+import lecho.lib.hellocharts.view.LineChartView
 import redstone.footsensor.databinding.ActivityDashboardBinding
 import java.util.UUID
 
@@ -39,6 +45,9 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDashboardBinding
 
     private lateinit var sensorListAdapter: SensorListAdapter
+    private lateinit var dataChart: LineChartView
+
+    private var sensorValues = Array(3) { Array(4) { FixedQueue<UByte>(64) } }
 
     private fun checkPermission(permission: String) =
         ContextCompat.checkSelfPermission(
@@ -68,6 +77,7 @@ class DashboardActivity : AppCompatActivity() {
 
         val sensorList = binding.sensorList
         val buttonDisconnect = binding.buttonDisconnect
+        dataChart = binding.chartData.apply { isInteractive = false }
 
         val btManager = getSystemService(BluetoothManager::class.java)
         val btAdapter = btManager.adapter
@@ -101,7 +111,7 @@ class DashboardActivity : AppCompatActivity() {
             finish()
         }
 
-        sensorListAdapter = SensorListAdapter()
+        sensorListAdapter = SensorListAdapter(this)
         sensorList.adapter = sensorListAdapter
 
     }
@@ -210,13 +220,35 @@ class DashboardActivity : AppCompatActivity() {
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
-            val sensorData = Array(3) { Array<UByte>(4) { 0u } }
+
+            val currentSensorValue = Array(3) { Array<UByte>(4) { 0u } }
             for (i in 0 until 12) {
-                sensorData[i / 4][i % 4] = value[i].toUByte()
+                val row = i / 4
+                val col = i % 4
+                currentSensorValue[row][col] = value[i].toUByte()
+                sensorValues[row][col].pushBack(value[i].toUByte())
             }
 
             runOnUiThread {
-                sensorListAdapter.updateData(sensorData)
+                sensorListAdapter.updateData(currentSensorValue)
+            }
+
+            // For the live line chart
+            val sensorClicked = sensorListAdapter.sensorClicked
+            if (sensorClicked != null) {
+                val theLine = Line().apply {
+                    setHasPoints(false)
+                }
+                val row = sensorClicked / 4
+                val col = sensorClicked % 4
+                for ((i, n) in sensorValues[row][col].getData().withIndex()) {
+                    theLine.values.add(PointValue(i.toFloat(), n.toFloat()))
+                }
+                dataChart.lineChartData = LineChartData().apply {
+                    lines = listOf(theLine)
+                    title="Sensor: $row, $col"
+
+                }
             }
         }
     }
@@ -232,9 +264,10 @@ private class SensorListViewHolder(itemView: View) : RecyclerView.ViewHolder(ite
 }
 
 @SuppressLint("MissingPermission")
-private class SensorListAdapter : RecyclerView.Adapter<SensorListViewHolder>() {
+private class SensorListAdapter (private val context: Context): RecyclerView.Adapter<SensorListViewHolder>() {
 
-    private var sensorValues = Array(3) { arrayOf<UByte>(114U, 5U, 14U, 191U) }
+    private var sensorValues = Array(3) { Array<UByte>(4) { 0U } }
+    private var _sensorClicked: Int? = null
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SensorListViewHolder =
         SensorListViewHolder(
@@ -248,10 +281,16 @@ private class SensorListAdapter : RecyclerView.Adapter<SensorListViewHolder>() {
         for (sensorID in 0 until 4) {
             val textBg = GradientDrawable().apply {
                 cornerRadius = 20F
-                setColor(Color.argb(sensorValues[position][sensorID].toInt(), 0xE5, 0x39, 0x35))
+                setColor(
+                    Color.argb(sensorValues[position][sensorID].toInt(), 0x43, 0xA0, 0x47)
+                )
             }
             holder.sensors[sensorID].background = textBg
             holder.sensors[sensorID].text = "$sensorID, $position"
+            holder.sensors[sensorID].setOnClickListener {
+                Toast.makeText(context,"Selected: $sensorID, $position",Toast.LENGTH_SHORT).show()
+                _sensorClicked = sensorID + position * 4
+            }
         }
     }
 
@@ -260,4 +299,6 @@ private class SensorListAdapter : RecyclerView.Adapter<SensorListViewHolder>() {
         sensorValues = data
         notifyDataSetChanged()
     }
+
+    val sensorClicked get() = _sensorClicked
 }

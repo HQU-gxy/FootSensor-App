@@ -15,6 +15,7 @@ navigationUiKtx = "2.7.7"
 eventbus = "3.3.1"
 refreshLayoutKernel = "2.1.0"
 refreshHeaderMaterial = "2.1.0"
+hellochartsLibrary = "1.5.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -31,6 +32,7 @@ androidx-navigation-ui-ktx = { group = "androidx.navigation", name = "navigation
 eventbus = { group = "org.greenrobot", name = "eventbus", version.ref = "eventbus" }
 refresh-layout-kernel = { group = "io.github.scwang90", name = "refresh-layout-kernel", version.ref = "refreshLayoutKernel" }
 refresh-header-material = { group = "io.github.scwang90", name = "refresh-header-material", version.ref = "refreshHeaderMaterial" }
+hellocharts-library = { group = "com.github.lecho", name = "hellocharts-library", version.ref = "hellochartsLibrary" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

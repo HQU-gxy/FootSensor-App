@@ -3,6 +3,7 @@
     <string name="title_home">Home</string>
     <string name="title_devices">Devices</string>
 
+    <string name="hint_click_a_sensor">Click on a sensor to see the live chart</string>
     <!--Button Text-->
     <string name="action_scan">Scan</string>
     <string name="action_connect">Connect</string>

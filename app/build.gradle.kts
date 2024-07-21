@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    
+
     namespace = "redstone.footsensor"
     compileSdk = 34
 
@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.eventbus)
     implementation(libs.refresh.layout.kernel)
     implementation(libs.refresh.header.material)
+    implementation(libs.hellocharts.library)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
